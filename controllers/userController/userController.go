@@ -17,7 +17,7 @@ func (user *UserController) clientSignup(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "you are already logged in", http.StatusConflict)
 		return
 	}
-	var req pb.UserSignUpRequest
+	var req pb.ClientSignUpRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -188,4 +188,157 @@ func (user *UserController) freelancerSignup(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
+}
+
+func (user *UserController) clientLogin(w http.ResponseWriter, r *http.Request) {
+	if cookie, _ := r.Cookie("ClientToken"); cookie != nil {
+		http.Error(w, "you are already logged in", http.StatusConflict)
+		return
+	}
+	var req pb.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	res, err := user.Conn.ClientLogin(context.Background(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	jsonData, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	cookieString, err := jwt.GenerateJWT(res.Id, false, []byte(user.Secret))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	cookie := &http.Cookie{
+		Name:     "ClientToken",
+		Value:    cookieString,
+		Expires:  time.Now().Add(48 * time.Hour),
+		Path:     "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func (user *UserController) freelancerLogin(w http.ResponseWriter, r *http.Request) {
+	if cookie, _ := r.Cookie("FreelancerToken"); cookie != nil {
+		http.Error(w, "you are already logged in", http.StatusConflict)
+		return
+	}
+	var req pb.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	res, err := user.Conn.FreelancerLogin(context.Background(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	jsonData, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	cookieString, err := jwt.GenerateJWT(res.Id, false, []byte(user.Secret))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	cookie := &http.Cookie{
+		Name:     "FreelancerToken",
+		Value:    cookieString,
+		Expires:  time.Now().Add(48 * time.Hour),
+		Path:     "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func (user *UserController) adminLogin(w http.ResponseWriter, r *http.Request) {
+	if cookie, _ := r.Cookie("AdminToken"); cookie != nil {
+		http.Error(w, "you are already logged in", http.StatusConflict)
+		return
+	}
+	var req pb.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	res, err := user.Conn.AdminLogin(context.Background(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	jsonData, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	cookieString, err := jwt.GenerateJWT(res.Id, true, []byte(user.Secret))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	cookie := &http.Cookie{
+		Name:     "AdminToken",
+		Value:    cookieString,
+		Expires:  time.Now().Add(48 * time.Hour),
+		Path:     "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func (user *UserController) clientLogout(w http.ResponseWriter, r *http.Request) {
+	cookie := &http.Cookie{
+		Name:     "ClientToken",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		Path:     "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Logged out successfully"}`))
+}
+
+func (user *UserController) freelancerLogout(w http.ResponseWriter, r *http.Request) {
+	cookie := &http.Cookie{
+		Name:     "FreelancerToken",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		Path:     "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Logged out successfully"}`))
+}
+
+func (user *UserController) adminLogout(w http.ResponseWriter, r *http.Request) {
+	cookie := &http.Cookie{
+		Name:     "AdminToken",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		Path:     "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Logged out successfully"}`))
 }
