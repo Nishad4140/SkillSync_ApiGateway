@@ -31,7 +31,7 @@ func ClientMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}()
 		cookie, err := r.Cookie("ClientToken")
 		if err != nil {
-			http.Error(w, "please login, please login", http.StatusUnauthorized)
+			http.Error(w, "please login", http.StatusUnauthorized)
 			return
 		}
 		cookieVal := cookie.Value
@@ -56,7 +56,7 @@ func FreelancerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}()
 		cookie, err := r.Cookie("FreelancerToken")
 		if err != nil {
-			http.Error(w, "please login, please login", http.StatusUnauthorized)
+			http.Error(w, "please login", http.StatusUnauthorized)
 			return
 		}
 		cookieVal := cookie.Value
@@ -81,7 +81,7 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}()
 		cookie, err := r.Cookie("AdminToken")
 		if err != nil {
-			http.Error(w, "please login, please login", http.StatusUnauthorized)
+			http.Error(w, "please login", http.StatusUnauthorized)
 			return
 		}
 		cookieVal := cookie.Value

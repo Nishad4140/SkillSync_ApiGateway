@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Nishad4140/SkillSync_ApiGateway/helper"
@@ -72,7 +74,7 @@ func (user *UserController) clientSignup(w http.ResponseWriter, r *http.Request)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	_, err = user.Conn.CreateProfile(context.Background(), &pb.GetUserById{
+	_, err = user.Conn.ClientCreateProfile(context.Background(), &pb.GetUserById{
 		Id: res.Id,
 	})
 	if err != nil {
@@ -341,4 +343,181 @@ func (user *UserController) adminLogout(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"message":"Logged out successfully"}`))
+}
+
+func (user *UserController) addCategory(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddCategoryRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Category) {
+		http.Error(w, "please enter a valid category", http.StatusBadRequest)
+		return
+	}
+	_, err := user.Conn.AddCategory(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Category Added Successfully"}`))
+}
+
+func (user *UserController) updateCategory(w http.ResponseWriter, r *http.Request) {
+	var req *pb.UpdateCategoryRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Category) {
+		http.Error(w, "please enter a valid category", http.StatusBadRequest)
+		return
+	}
+	queryParams := r.URL.Query()
+	categoryId, err := strconv.Atoi(queryParams.Get("category_id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	req.Id = int32(categoryId)
+	_, err = user.Conn.UpdateCategory(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Category Updated Successfully"}`))
+}
+
+func (user *UserController) getAllCategories(w http.ResponseWriter, r *http.Request) {
+	categories, err := user.Conn.GetAllCategory(context.Background(), nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	categoriesData := []*pb.UpdateCategoryRequest{}
+	for {
+		category, err := categories.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		categoriesData = append(categoriesData, category)
+	}
+	jsonData, err := json.Marshal(categoriesData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func (user *UserController) clientAddAddress(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddAddressRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Country) {
+		http.Error(w, "please enter a valid country name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.State) {
+		http.Error(w, "please enter a valid state name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.District) {
+		http.Error(w, "please enter a valid district name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.City) {
+		http.Error(w, "please enter a valid city name", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retirieving the client id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	if _, err := user.Conn.ClientAddAddress(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Address added Successfully"}`))
+}
+
+func (user *UserController) clientUpdateAddress(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddressResponse
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Country) {
+		http.Error(w, "please enter a valid country name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.State) {
+		http.Error(w, "please enter a valid state name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.District) {
+		http.Error(w, "please enter a valid district name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.City) {
+		http.Error(w, "please enter a valid city name", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retirieving the client id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	if _, err := user.Conn.CLientUpdateAddress(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Address Updated Successfully"}`))
+}
+
+func (user *UserController) clientGetAddress(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retirieving the client id", http.StatusBadRequest)
+		return
+	}
+	req := &pb.GetUserById{
+		Id: userID,
+	}
+	address, err := user.Conn.ClientGetAddress(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if address.Country != "" {
+		w.Write([]byte(`{"message":"please add address"}`))
+		return
+	}
+	jsonData, err := json.Marshal(address)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonData)
 }

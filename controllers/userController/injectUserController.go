@@ -27,6 +27,9 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/client/signup", user.clientSignup)
 	r.Post("/client/login", user.clientLogin)
 	r.Post("/client/logout", middleware.ClientMiddleware(user.clientLogout))
+	r.Post("/client/address", middleware.ClientMiddleware(user.clientAddAddress))
+	r.Patch("/client/address", middleware.ClientMiddleware(user.clientUpdateAddress))
+	r.Get("/client/address", middleware.ClientMiddleware(user.clientGetAddress))
 
 	r.Post("/freelancer/signup", user.freelancerSignup)
 	r.Post("/freelancer/login", user.freelancerLogin)
@@ -34,4 +37,7 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 
 	r.Post("/admin/login", user.adminLogin)
 	r.Post("/admin/logout", middleware.AdminMiddleware(user.adminLogout))
+	r.Post("/admin/category", middleware.AdminMiddleware(user.addCategory))
+	r.Patch("/admin/category", middleware.AdminMiddleware(user.updateCategory))
+	r.Get("/admin/category", user.getAllCategories)
 }
