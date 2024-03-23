@@ -39,5 +39,8 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/admin/logout", middleware.AdminMiddleware(user.adminLogout))
 	r.Post("/admin/category", middleware.AdminMiddleware(user.addCategory))
 	r.Patch("/admin/category", middleware.AdminMiddleware(user.updateCategory))
-	r.Get("/admin/category", user.getAllCategories)
+	r.Get("/categories", user.getAllCategories)
+	r.Post("/admin/skill", middleware.AdminMiddleware(user.adminAddSkill))
+	r.Patch("/admin/skill", middleware.AdminMiddleware(user.adminUpdateSkill))
+	r.Get("/skills", user.getAllSkills)
 }

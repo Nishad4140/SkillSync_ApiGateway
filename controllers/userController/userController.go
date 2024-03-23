@@ -164,12 +164,30 @@ func (user *UserController) freelancerSignup(w http.ResponseWriter, r *http.Requ
 		}
 	}
 	// Check the Category here
+	category, err := user.Conn.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
+		Id: req.CategoryId,
+	})
+	if err != nil {
+		http.Error(w, "please enter a valid category", http.StatusBadRequest)
+		return
+	}
+	if category.Category == "" {
+		http.Error(w, "please enter a valid category", http.StatusBadRequest)
+		return
+	}
 	res, err := user.Conn.FreelancerSignup(context.Background(), &req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	// Create Freelancer Profile here
+	_, err = user.Conn.FreelancerCreateProfile(context.Background(), &pb.GetUserById{
+		Id: res.Id,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	jsonData, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -420,6 +438,83 @@ func (user *UserController) getAllCategories(w http.ResponseWriter, r *http.Requ
 	w.Write(jsonData)
 }
 
+func (user *UserController) adminAddSkill(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddSkillRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.CategoryId == 0 {
+		http.Error(w, "Please enter a valid category id", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Skill) {
+		http.Error(w, "please enter a valid skill name", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.AdminAddSkill(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Skill Added Successfully"}`))
+}
+
+func (user *UserController) adminUpdateSkill(w http.ResponseWriter, r *http.Request) {
+	var req *pb.SkillResponse
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Skill) {
+		http.Error(w, "please enter a valid skill name", http.StatusBadRequest)
+		return
+	}
+	queryParams := r.URL.Query()
+	skillId, err := strconv.Atoi(queryParams.Get("skill_id"))
+	if err != nil {
+		http.Error(w, "error while converting the id", http.StatusBadRequest)
+		return
+	}
+	req.Id = int32(skillId)
+	if _, err := user.Conn.AdminUpdateSkill(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Skill Updated Successfully"}`))
+}
+
+func (user *UserController) getAllSkills(w http.ResponseWriter, r *http.Request) {
+	skills, err := user.Conn.GetAllSkills(context.Background(), nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	skillsData := []*pb.SkillResponse{}
+	for {
+		skill, err := skills.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		skillsData = append(skillsData, skill)
+	}
+	jsonData, err := json.Marshal(skillsData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
 func (user *UserController) clientAddAddress(w http.ResponseWriter, r *http.Request) {
 	var req *pb.AddAddressRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -485,7 +580,10 @@ func (user *UserController) clientUpdateAddress(w http.ResponseWriter, r *http.R
 		return
 	}
 	req.UserId = userID
-	if _, err := user.Conn.CLientUpdateAddress(context.Background(), req); err != nil {
+	queryParams := r.URL.Query()
+	addressId := queryParams.Get("address_id")
+	req.Id = addressId
+	if _, err := user.Conn.ClientUpdateAddress(context.Background(), req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
