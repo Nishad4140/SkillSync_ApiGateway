@@ -620,6 +620,98 @@ func (user *UserController) clientGetAddress(w http.ResponseWriter, r *http.Requ
 	w.Write(jsonData)
 }
 
+func (user *UserController) uploadClientProfileImage(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, "unable to parse form", http.StatusBadRequest)
+		return
+	}
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "unable to fetch the file from request", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+	filebyte, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "unable to read the file", http.StatusInternalServerError)
+		return
+	}
+	clientID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the client id", http.StatusBadRequest)
+		return
+	}
+	req := &pb.ImageRequest{
+		ObjectName: fmt.Sprintf("%s-profile", clientID),
+		ImageData:  filebyte,
+		UserId:     clientID,
+	}
+	res, err := user.Conn.ClientUploadProfileImage(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	jsonData, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "error while marshalling the data", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func (user *UserController) clientEditName(w http.ResponseWriter, r *http.Request) {
+	var req *pb.EditNameRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	clientID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the client id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = clientID
+	if !helper.CheckString(req.Name) {
+		http.Error(w, "please enter a valid name", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.ClientEditName(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Name Updated Successfully"}`))
+}
+
+func (user *UserController) clientEditPhone(w http.ResponseWriter, r *http.Request) {
+	var req *pb.EditPhoneRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	clientID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the client id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = clientID
+	if !helper.CheckStringNumber(req.Phone) {
+		http.Error(w, "please enter a valid phone number", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.ClientEditPhone(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Phone number Updated Successfully"}`))
+}
+
 func (user *UserController) freelancerAddAddress(w http.ResponseWriter, r *http.Request) {
 	var req *pb.AddAddressRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

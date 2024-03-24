@@ -8,6 +8,8 @@ github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240322073324-6e9b21afeb46 h1
 github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240322073324-6e9b21afeb46/go.mod h1:0iV86r5XZHcQ1BUErHL0ok4aagP2k+jTDwCAxb2giEc=
 github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240323084750-b0e34768e510 h1:ebLGQMtxRBgfT8lHOYEkkIwAWlFuxu0oXkrqyFXh3ks=
 github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240323084750-b0e34768e510/go.mod h1:0iV86r5XZHcQ1BUErHL0ok4aagP2k+jTDwCAxb2giEc=
+github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240324060750-f9fb670a3612 h1:9mx+EcgH5MJkzp4XLKLe2v3KHnI9dtFRfF0StON7PHQ=
+github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240324060750-f9fb670a3612/go.mod h1:0iV86r5XZHcQ1BUErHL0ok4aagP2k+jTDwCAxb2giEc=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/go-chi/chi v1.5.5 h1:vOB/HbEMt9QqBqErz07QehcOKHaWFtuj87tTDVz2qXE=
