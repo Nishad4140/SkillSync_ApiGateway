@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Nishad4140/SkillSync_ApiGateway/helper"
+	helperstruct "github.com/Nishad4140/SkillSync_ApiGateway/helperStruct"
 	"github.com/Nishad4140/SkillSync_ApiGateway/jwt"
 	"github.com/Nishad4140/SkillSync_ProtoFiles/pb"
 )
@@ -617,6 +618,51 @@ func (user *UserController) clientGetAddress(w http.ResponseWriter, r *http.Requ
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Write(jsonData)
+}
+
+func (user *UserController) getClientProfile(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retirieving the client id", http.StatusBadRequest)
+		return
+	}
+	client, err := user.Conn.GetClientById(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
+	if err != nil {
+		http.Error(w, "error in retrieving the user info", http.StatusBadRequest)
+		return
+	}
+	address, err := user.Conn.ClientGetAddress(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
+	if err != nil {
+		http.Error(w, "error in retrieving the user address", http.StatusBadRequest)
+		return
+	}
+	imageData, err := user.Conn.ClientGetProfileImage(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
+	if err != nil {
+		http.Error(w, "error in retrieving the user profile image", http.StatusBadRequest)
+		return
+	}
+	res := helperstruct.ClientProfile{
+		Id:      client.Id,
+		Name:    client.Name,
+		Email:   client.Email,
+		Phone:   client.Phone,
+		Image:   imageData.Url,
+		Address: address,
+	}
+	jsonData, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "error while marshalling the data", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
 }
 

@@ -27,6 +27,7 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/client/signup", user.clientSignup)
 	r.Post("/client/login", user.clientLogin)
 	r.Post("/client/logout", middleware.ClientMiddleware(user.clientLogout))
+	r.Get("/client/profile", middleware.ClientMiddleware(user.getClientProfile))
 	r.Post("/client/profile/address", middleware.ClientMiddleware(user.clientAddAddress))
 	r.Patch("/client/profile/address", middleware.ClientMiddleware(user.clientUpdateAddress))
 	r.Get("/client/profile/address", middleware.ClientMiddleware(user.clientGetAddress))
