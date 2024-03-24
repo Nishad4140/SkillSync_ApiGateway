@@ -620,6 +620,111 @@ func (user *UserController) clientGetAddress(w http.ResponseWriter, r *http.Requ
 	w.Write(jsonData)
 }
 
+func (user *UserController) freelancerAddAddress(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddAddressRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Country) {
+		http.Error(w, "please enter a valid country name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.State) {
+		http.Error(w, "please enter a valid state name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.District) {
+		http.Error(w, "please enter a valid district name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.City) {
+		http.Error(w, "please enter a valid city name", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retirieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	if _, err := user.Conn.FreelancerAddAddress(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Address added Successfully"}`))
+}
+
+func (user *UserController) freelancerUpdateAddress(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddressResponse
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Country) {
+		http.Error(w, "please enter a valid country name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.State) {
+		http.Error(w, "please enter a valid state name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.District) {
+		http.Error(w, "please enter a valid district name", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.City) {
+		http.Error(w, "please enter a valid city name", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retirieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	queryParams := r.URL.Query()
+	addressId := queryParams.Get("address_id")
+	req.Id = addressId
+	if _, err := user.Conn.FreelancerUpdateAddress(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Address Updated Successfully"}`))
+}
+
+func (user *UserController) freelancerGetAddress(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retirieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req := &pb.GetUserById{
+		Id: userID,
+	}
+	address, err := user.Conn.FreelancerGetAddress(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if address.Country != "" {
+		w.Write([]byte(`{"message":"please add address"}`))
+		return
+	}
+	jsonData, err := json.Marshal(address)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonData)
+}
+
 func (user *UserController) blockClient(w http.ResponseWriter, r *http.Request) {
 	queryParam := r.URL.Query()
 	userId := queryParam.Get("client_id")
