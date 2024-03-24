@@ -41,17 +41,21 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/freelancer/profile/address", middleware.FreelancerMiddleware(user.freelancerAddAddress))
 	r.Patch("/freelancer/profile/address", middleware.FreelancerMiddleware(user.freelancerUpdateAddress))
 	r.Get("/freelancer/profile/address", middleware.FreelancerMiddleware(user.freelancerGetAddress))
+	r.Post("/freelancer/profile/uploadprofileimage", middleware.FreelancerMiddleware(user.uploadFreelancerProfileImage))
+	r.Patch("/freelancer/profile/name", middleware.FreelancerMiddleware(user.freelancerEditName))
+	r.Patch("/freelancer/profile/phone", middleware.FreelancerMiddleware(user.freelancerEditPhone))
 
 	r.Post("/admin/login", user.adminLogin)
 	r.Post("/admin/logout", middleware.AdminMiddleware(user.adminLogout))
 	r.Post("/admin/category", middleware.AdminMiddleware(user.addCategory))
 	r.Patch("/admin/category", middleware.AdminMiddleware(user.updateCategory))
-	r.Get("/categories", user.getAllCategories)
 	r.Post("/admin/skill", middleware.AdminMiddleware(user.adminAddSkill))
 	r.Patch("/admin/skill", middleware.AdminMiddleware(user.adminUpdateSkill))
-	r.Get("/skills", user.getAllSkills)
 	r.Post("/client/block", middleware.AdminMiddleware(user.blockClient))
 	r.Post("/client/unblock", middleware.AdminMiddleware(user.unBlockClient))
 	r.Post("/freelancer/block", middleware.AdminMiddleware(user.blockFreelancer))
 	r.Post("/freelancer/unblock", middleware.AdminMiddleware(user.unBlockFreelancer))
+
+	r.Get("/categories", user.getAllCategories)
+	r.Get("/skills", user.getAllSkills)
 }
