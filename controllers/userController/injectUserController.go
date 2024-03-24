@@ -27,9 +27,9 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/client/signup", user.clientSignup)
 	r.Post("/client/login", user.clientLogin)
 	r.Post("/client/logout", middleware.ClientMiddleware(user.clientLogout))
-	r.Post("/client/address", middleware.ClientMiddleware(user.clientAddAddress))
-	r.Patch("/client/address", middleware.ClientMiddleware(user.clientUpdateAddress))
-	r.Get("/client/address", middleware.ClientMiddleware(user.clientGetAddress))
+	r.Post("/client/profile/address", middleware.ClientMiddleware(user.clientAddAddress))
+	r.Patch("/client/profile/address", middleware.ClientMiddleware(user.clientUpdateAddress))
+	r.Get("/client/profile/address", middleware.ClientMiddleware(user.clientGetAddress))
 
 	r.Post("/freelancer/signup", user.freelancerSignup)
 	r.Post("/freelancer/login", user.freelancerLogin)
@@ -43,4 +43,8 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/admin/skill", middleware.AdminMiddleware(user.adminAddSkill))
 	r.Patch("/admin/skill", middleware.AdminMiddleware(user.adminUpdateSkill))
 	r.Get("/skills", user.getAllSkills)
+	r.Post("/client/block", middleware.AdminMiddleware(user.blockClient))
+	r.Post("/client/unblock", middleware.AdminMiddleware(user.unBlockClient))
+	r.Post("/freelancer/block", middleware.AdminMiddleware(user.blockFreelancer))
+	r.Post("/freelancer/unblock", middleware.AdminMiddleware(user.unBlockFreelancer))
 }

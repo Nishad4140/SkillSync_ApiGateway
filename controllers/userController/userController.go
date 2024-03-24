@@ -619,3 +619,75 @@ func (user *UserController) clientGetAddress(w http.ResponseWriter, r *http.Requ
 	}
 	w.Write(jsonData)
 }
+
+func (user *UserController) blockClient(w http.ResponseWriter, r *http.Request) {
+	queryParam := r.URL.Query()
+	userId := queryParam.Get("client_id")
+	if userId == "" {
+		http.Error(w, "please provide the user id", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.BlockClient(context.Background(), &pb.GetUserById{
+		Id: userId,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"User Blocked Successfully"}`))
+}
+
+func (user *UserController) unBlockClient(w http.ResponseWriter, r *http.Request) {
+	queryParam := r.URL.Query()
+	userId := queryParam.Get("client_id")
+	if userId == "" {
+		http.Error(w, "please provide the user id", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.UnBlockClient(context.Background(), &pb.GetUserById{
+		Id: userId,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"User UnBlocked Successfully"}`))
+}
+
+func (user *UserController) blockFreelancer(w http.ResponseWriter, r *http.Request) {
+	queryParam := r.URL.Query()
+	userId := queryParam.Get("freelancer_id")
+	if userId == "" {
+		http.Error(w, "please provide the user id", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.BlockFreelancer(context.Background(), &pb.GetUserById{
+		Id: userId,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"User Blocked Successfully"}`))
+}
+
+func (user *UserController) unBlockFreelancer(w http.ResponseWriter, r *http.Request) {
+	queryParam := r.URL.Query()
+	userId := queryParam.Get("freelancer_id")
+	if userId == "" {
+		http.Error(w, "please provide the user id", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.UnBlockFreelancer(context.Background(), &pb.GetUserById{
+		Id: userId,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"User UnBlocked Successfully"}`))
+}
