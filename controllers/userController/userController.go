@@ -882,7 +882,7 @@ func (user *UserController) uploadFreelancerProfileImage(w http.ResponseWriter, 
 	}
 	freelancerID, ok := r.Context().Value("freelancerID").(string)
 	if !ok {
-		http.Error(w, "error while retrieving the client id", http.StatusBadRequest)
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
 		return
 	}
 	req := &pb.ImageRequest{
@@ -913,7 +913,7 @@ func (user *UserController) freelancerEditName(w http.ResponseWriter, r *http.Re
 	}
 	freelancerID, ok := r.Context().Value("freelancerID").(string)
 	if !ok {
-		http.Error(w, "error while retrieving the client id", http.StatusBadRequest)
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
 		return
 	}
 	req.UserId = freelancerID
@@ -938,7 +938,7 @@ func (user *UserController) freelancerEditPhone(w http.ResponseWriter, r *http.R
 	}
 	freelancerID, ok := r.Context().Value("freelancerID").(string)
 	if !ok {
-		http.Error(w, "error while retrieving the client id", http.StatusBadRequest)
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
 		return
 	}
 	req.UserId = freelancerID
@@ -953,6 +953,95 @@ func (user *UserController) freelancerEditPhone(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"message":"Phone number Updated Successfully"}`))
+}
+
+func (user *UserController) freelancerAddSkill(w http.ResponseWriter, r *http.Request) {
+	var req *pb.SkillRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	freelancerID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = freelancerID
+
+	if _, err := user.Conn.FreelancerAddSkill(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Skill Added Successfully"}`))
+}
+
+func (user *UserController) freelancerDeleteSkill(w http.ResponseWriter, r *http.Request) {
+	freelancerID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req := &pb.SkillRequest{
+		UserId: freelancerID,
+	}
+	queryParams := r.URL.Query()
+	skillId, err := strconv.Atoi(queryParams.Get("skill_id"))
+	if err != nil {
+		http.Error(w, "error while parsing the client id to in", http.StatusBadRequest)
+		return
+	}
+	req.SkillId = int32(skillId)
+	if _, err := user.Conn.FreelancerDeleteSkill(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Skill Deleted Successfully"}`))
+}
+
+func (user *UserController) freelancerGetAllSkill(w http.ResponseWriter, r *http.Request) {
+	freelancerID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req := &pb.GetUserById{
+		Id: freelancerID,
+	}
+	skills, err := user.Conn.FreelancerGetAllSkill(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	skillData := []*pb.SkillResponse{}
+	for {
+		skill, err := skills.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		skillData = append(skillData, skill)
+	}
+	jsonData, err := json.Marshal(skillData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(skillData) == 0 {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"message":"No Skill Added"}`))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
 }
 
 func (user *UserController) blockClient(w http.ResponseWriter, r *http.Request) {

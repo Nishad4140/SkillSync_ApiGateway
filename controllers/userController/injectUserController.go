@@ -44,6 +44,9 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/freelancer/profile/uploadprofileimage", middleware.FreelancerMiddleware(user.uploadFreelancerProfileImage))
 	r.Patch("/freelancer/profile/name", middleware.FreelancerMiddleware(user.freelancerEditName))
 	r.Patch("/freelancer/profile/phone", middleware.FreelancerMiddleware(user.freelancerEditPhone))
+	r.Post("/freelancer/profile/skill", middleware.FreelancerMiddleware(user.freelancerAddSkill))
+	r.Delete("/freelancer/profile/skill", middleware.FreelancerMiddleware(user.freelancerDeleteSkill))
+	r.Get("/freelancer/profile/skill", middleware.FreelancerMiddleware(user.freelancerGetAllSkill))
 
 	r.Post("/admin/login", user.adminLogin)
 	r.Post("/admin/logout", middleware.AdminMiddleware(user.adminLogout))
