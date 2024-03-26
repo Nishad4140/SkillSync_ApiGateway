@@ -32,6 +32,23 @@ func CheckStringNumber(str string) bool {
 	return len(str) == 10
 }
 
+func CheckNegativeStringNumber(s string) bool {
+	return strings.HasPrefix(s, "-")
+}
+
+func CheckNumberInString(s string) bool {
+	for _, sr := range s {
+		if unicode.IsNumber(sr) {
+			return true
+		}
+	}
+	return false
+}
+
+func CheckYear(s string) bool {
+	return strings.HasSuffix(s, "years")
+}
+
 func CheckNegative(num int32) bool {
 	return num < 0
 }

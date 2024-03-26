@@ -169,7 +169,7 @@ func (user *UserController) freelancerSignup(w http.ResponseWriter, r *http.Requ
 		Id: req.CategoryId,
 	})
 	if err != nil {
-		http.Error(w, "please enter a valid category", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if category.Category == "" {
@@ -851,7 +851,7 @@ func (user *UserController) freelancerGetAddress(w http.ResponseWriter, r *http.
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if address.Country != "" {
+	if address.Country == "" {
 		w.Write([]byte(`{"message":"please add address"}`))
 		return
 	}
@@ -1042,6 +1042,39 @@ func (user *UserController) freelancerGetAllSkill(w http.ResponseWriter, r *http
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
+}
+
+func (user *UserController) freelancerAddExperience(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddExperienceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if helper.CheckNegativeStringNumber(req.Experience) {
+		http.Error(w, "please enter a valid experience", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckNumberInString(req.Experience) {
+		http.Error(w, "please enter a valid experience", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckYear(req.Experience) {
+		http.Error(w, "pleae enter a valid experience which contains the number of years", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error whil retrieving freelancerID", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	if _, err := user.Conn.FreelancerAddExperience(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Experience Added Successfully"}`))
 }
 
 func (user *UserController) blockClient(w http.ResponseWriter, r *http.Request) {
