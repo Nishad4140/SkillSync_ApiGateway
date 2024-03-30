@@ -3,6 +3,7 @@ package helper
 import (
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"google.golang.org/grpc"
@@ -43,6 +44,15 @@ func CheckNumberInString(s string) bool {
 		}
 	}
 	return false
+}
+
+func CheckDate(date string) bool {
+	layOut := "02-01-2006"
+	_, err := time.Parse(layOut, date)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func CheckYear(s string) bool {

@@ -1077,6 +1077,101 @@ func (user *UserController) freelancerAddExperience(w http.ResponseWriter, r *ht
 	w.Write([]byte(`{"message":"Experience Added Successfully"}`))
 }
 
+func (user *UserController) freelancerAddEducation(w http.ResponseWriter, r *http.Request) {
+	var req *pb.EducationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Degree) {
+		http.Error(w, "enter a valid degree", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Institution) {
+		http.Error(w, "enter a valid Institution", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckDate(req.StartDate) {
+		http.Error(w, "enter a valid date", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckDate(req.EndDate) {
+		http.Error(w, "enter a valid date", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	if _, err := user.Conn.FreelancerAddEducation(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Education Added Successfully"}`))
+}
+
+func (user *UserController) freelancerEditEducation(w http.ResponseWriter, r *http.Request) {
+	var req *pb.EducationResponse
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Degree) {
+		http.Error(w, "enter a valid degree", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Institution) {
+		http.Error(w, "enter a valid Institution", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckDate(req.StartDate) {
+		http.Error(w, "enter a valid date", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckDate(req.EndDate) {
+		http.Error(w, "enter a valid date", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	queryParams := r.URL.Query()
+	educationId := queryParams.Get("education_id")
+	req.Id = educationId
+	if _, err := user.Conn.FreelancerEditEducation(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Education Edited Successfully"}`))
+}
+
+func (user *UserController) freelancerRemoveEducation(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	educationId := queryParams.Get("education_id")
+	if educationId == "" {
+		http.Error(w, "please provide a valid education id", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.FreelancerRemoveEducation(context.Background(), &pb.EducationById{
+		EducationId: educationId,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Education Deleted Successfully"}`))
+}
+
 func (user *UserController) blockClient(w http.ResponseWriter, r *http.Request) {
 	queryParam := r.URL.Query()
 	userId := queryParam.Get("client_id")
