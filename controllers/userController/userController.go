@@ -1103,18 +1103,15 @@ func (user *UserController) freelancerAddTitle(w http.ResponseWriter, r *http.Re
 }
 
 func (user *UserController) getFreelancerProfile(w http.ResponseWriter, r *http.Request) {
-	var req *pb.GetUserById
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 	userID, ok := r.Context().Value("freelancerID").(string)
 	if !ok {
 		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
 		return
 	}
-	req.Id = userID
-	freelancer, err := user.Conn.GetFreelancerById(context.Background(), req)
+
+	freelancer, err := user.Conn.GetFreelancerById(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -1126,17 +1123,23 @@ func (user *UserController) getFreelancerProfile(w http.ResponseWriter, r *http.
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	address, err := user.Conn.FreelancerGetAddress(context.Background(), req)
+	address, err := user.Conn.FreelancerGetAddress(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	imageData, err := user.Conn.FreelancerGetProfileImage(context.Background(), req)
+	imageData, err := user.Conn.FreelancerGetProfileImage(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	skills, err := user.Conn.FreelancerGetAllSkill(context.Background(), req)
+	skills, err := user.Conn.FreelancerGetAllSkill(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -1153,7 +1156,9 @@ func (user *UserController) getFreelancerProfile(w http.ResponseWriter, r *http.
 		}
 		skillData = append(skillData, skill)
 	}
-	educations, err := user.Conn.FreelancerGetEducation(context.Background(), req)
+	educations, err := user.Conn.FreelancerGetEducation(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -1170,7 +1175,9 @@ func (user *UserController) getFreelancerProfile(w http.ResponseWriter, r *http.
 		}
 		educationData = append(educationData, education)
 	}
-	profile, err := user.Conn.FreelancerGetProfile(context.Background(), req)
+	profile, err := user.Conn.FreelancerGetProfile(context.Background(), &pb.GetUserById{
+		Id: userID,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
