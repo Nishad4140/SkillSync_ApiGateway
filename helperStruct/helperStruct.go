@@ -10,3 +10,16 @@ type ClientProfile struct {
 	Image   string `json:"image,omitempty"`
 	Address *pb.AddressResponse
 }
+
+type FreelancerProfile struct {
+	Id                       string
+	Name                     string
+	Email                    string
+	Phone                    string
+	Image                    string `json:"image,omitempty"`
+	ExperienceInCurrentField string `json:"experience_in_current_field,omitempty"`
+	Category                 string
+	Skills                   []*pb.SkillResponse
+	Educations               []*pb.EducationResponse
+	Address                  *pb.AddressResponse
+}

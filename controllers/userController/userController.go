@@ -1077,6 +1077,127 @@ func (user *UserController) freelancerAddExperience(w http.ResponseWriter, r *ht
 	w.Write([]byte(`{"message":"Experience Added Successfully"}`))
 }
 
+func (user *UserController) freelancerAddTitle(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddTitleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Title) {
+		http.Error(w, "please enter a valid title", http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+	if _, err := user.Conn.FreelancerAddTitle(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"Title Added Successfully"}`))
+}
+
+func (user *UserController) getFreelancerProfile(w http.ResponseWriter, r *http.Request) {
+	var req *pb.GetUserById
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.Id = userID
+	freelancer, err := user.Conn.GetFreelancerById(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	category, err := user.Conn.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
+		Id: freelancer.CategoryId,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	address, err := user.Conn.FreelancerGetAddress(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	imageData, err := user.Conn.FreelancerGetProfileImage(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	skills, err := user.Conn.FreelancerGetAllSkill(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	skillData := []*pb.SkillResponse{}
+	for {
+		skill, err := skills.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		skillData = append(skillData, skill)
+	}
+	educations, err := user.Conn.FreelancerGetEducation(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	educationData := []*pb.EducationResponse{}
+	for {
+		education, err := educations.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		educationData = append(educationData, education)
+	}
+	profile, err := user.Conn.FreelancerGetProfile(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	res := helperstruct.FreelancerProfile{
+		Id:                       freelancer.Id,
+		Name:                     freelancer.Name,
+		Email:                    freelancer.Email,
+		Phone:                    freelancer.Phone,
+		Image:                    imageData.Url,
+		ExperienceInCurrentField: profile.ExperienceInCurrentField,
+		Category:                 category.Category,
+		Skills:                   skillData,
+		Educations:               educationData,
+		Address:                  address,
+	}
+	jsonData, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
 func (user *UserController) freelancerAddEducation(w http.ResponseWriter, r *http.Request) {
 	var req *pb.EducationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
