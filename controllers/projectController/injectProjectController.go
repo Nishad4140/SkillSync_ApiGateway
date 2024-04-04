@@ -27,9 +27,14 @@ func (project *Projectcontroller) InitializeProjectController(r *chi.Mux) {
 	r.Post("/freelancers/gigs", middleware.FreelancerMiddleware(project.freelancerCreateGig))
 	r.Patch("/freelancers/gigs", middleware.FreelancerMiddleware(project.freelancerUpdateGig))
 	r.Get("/freelancers/gigs", middleware.FreelancerMiddleware(project.freelancerGetAllGigs))
+	r.Get("/freelancer/requests", middleware.FreelancerMiddleware(project.freelancerGetClientRequests))
 
 	r.Post("/admin/pakcage-types", middleware.AdminMiddleware(project.adminAddProjectType))
 	r.Patch("/admin/package-types", middleware.AdminMiddleware(project.adminEditProjectType))
+
+	r.Post("/client/requests", middleware.ClientMiddleware(project.clientAddRequest))
+	r.Patch("/client/requests", middleware.ClientMiddleware(project.clientUpdateRequest))
+	r.Get("/client/requests", middleware.ClientMiddleware(project.clientGetRequest))
 
 	r.Get("/package-types", project.getAllPackageTypes)
 	r.Get("/gigs", project.getGig)

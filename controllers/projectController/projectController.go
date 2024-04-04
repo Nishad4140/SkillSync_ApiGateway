@@ -211,6 +211,200 @@ func (project *Projectcontroller) freelancerGetAllGigs(w http.ResponseWriter, r 
 	w.Write(jsonData)
 }
 
+func (project *Projectcontroller) clientAddRequest(w http.ResponseWriter, r *http.Request) {
+	var req *pb.AddClientGigRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(req.Title) < 15 {
+		http.Error(w, "please enter the title not less than 15 words", http.StatusBadRequest)
+		return
+	}
+	if len(req.Description) < 50 {
+		http.Error(w, "please enter the description not less than 50 words", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckDate(req.DeliveryDate) {
+		http.Error(w, "enter a valid date", http.StatusBadRequest)
+		return
+	}
+	if req.CategoryId == 0 {
+		http.Error(w, "enter a valid category id", http.StatusBadRequest)
+		return
+	}
+	if req.SkillId == 0 {
+		http.Error(w, "enter a valid skill id", http.StatusBadRequest)
+		return
+	}
+	if req.Price == 0 {
+		http.Error(w, "please enter a valid price", http.StatusBadRequest)
+		return
+	}
+	clientID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.ClientId = clientID
+
+	if _, err := project.Conn.ClientAddRequest(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"gig added successfully"}`))
+}
+
+func (project *Projectcontroller) clientUpdateRequest(w http.ResponseWriter, r *http.Request) {
+	var req *pb.ClientRequestResponse
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(req.Title) < 15 {
+		http.Error(w, "please enter the title not less than 15 words", http.StatusBadRequest)
+		return
+	}
+	if len(req.Description) < 50 {
+		http.Error(w, "please enter the description not less than 50 words", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckDate(req.DeliveryDate) {
+		http.Error(w, "enter a valid date", http.StatusBadRequest)
+		return
+	}
+	if req.CategoryId == 0 {
+		http.Error(w, "enter a valid category id", http.StatusBadRequest)
+		return
+	}
+	if req.SkillId == 0 {
+		http.Error(w, "enter a valid skill id", http.StatusBadRequest)
+		return
+	}
+	if req.Price == 0 {
+		http.Error(w, "please enter a valid price", http.StatusBadRequest)
+		return
+	}
+	clientID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.ClientId = clientID
+	queryParams := r.URL.Query()
+	request_id := queryParams.Get("request_id")
+	req.Id = request_id
+	if _, err := project.Conn.ClientUpdateRequest(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"gig updated successfully"}`))
+}
+
+func (project *Projectcontroller) clientGetRequest(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	reqId := queryParams.Get("request_id")
+	if reqId != "" {
+		req, err := project.Conn.GetClientRequest(context.Background(), &pb.GetById{
+			Id: reqId,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		jsonData, err := json.Marshal(req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonData)
+		return
+	}
+	clientID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req := &pb.GetByUserId{
+		Id: clientID,
+	}
+	clientReqs, err := project.Conn.GetAllClientRequest(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	reqData := []*pb.ClientRequestResponse{}
+
+	for {
+		gig, err := clientReqs.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		reqData = append(reqData, gig)
+	}
+	jsonData, err := json.Marshal(reqData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(reqData) == 0 {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"message":"no request added"}`))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func (project *Projectcontroller) freelancerGetClientRequests(w http.ResponseWriter, r *http.Request) {
+	freelancerID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+
+	reqClients, err := project.Conn.GetAllClientRequestForFreelancers(context.Background(), &pb.GetByUserId{
+		Id: freelancerID,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	reqData := []*pb.ClientRequestResponse{}
+
+	for {
+		req, err := reqClients.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		reqData = append(reqData, req)
+	}
+	jsonData, err := json.Marshal(reqData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
 func (project *Projectcontroller) adminAddProjectType(w http.ResponseWriter, r *http.Request) {
 	var req *pb.AddPackageTypeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
