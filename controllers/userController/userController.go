@@ -164,7 +164,7 @@ func (user *UserController) freelancerSignup(w http.ResponseWriter, r *http.Requ
 			return
 		}
 	}
-	// Check the Category here
+	
 	category, err := user.Conn.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
 		Id: req.CategoryId,
 	})

@@ -3,7 +3,7 @@ module github.com/Nishad4140/SkillSync_ApiGateway
 go 1.21.0
 
 require (
-	github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240402043106-a8992232767b
+	github.com/Nishad4140/SkillSync_ProtoFiles v0.0.0-20240403090626-17cc0a32ffd6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v1.5.5
 	github.com/joho/godotenv v1.5.1
