@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -23,6 +24,15 @@ func CheckString(str string) bool {
 		}
 	}
 	return true
+}
+
+func ConvertStringToDate(data string) (time.Time, error) {
+	layOut := "02-01-2006"
+	date, err := time.Parse(layOut, data)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error while converting to time")
+	}
+	return date, nil
 }
 
 func CheckStringNumber(str string) bool {

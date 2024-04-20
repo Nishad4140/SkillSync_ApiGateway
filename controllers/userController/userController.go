@@ -164,7 +164,7 @@ func (user *UserController) freelancerSignup(w http.ResponseWriter, r *http.Requ
 			return
 		}
 	}
-	
+
 	category, err := user.Conn.GetCategoryById(context.Background(), &pb.GetCategoryByIdRequest{
 		Id: req.CategoryId,
 	})
@@ -1298,6 +1298,45 @@ func (user *UserController) freelancerRemoveEducation(w http.ResponseWriter, r *
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"message":"Education Deleted Successfully"}`))
+}
+
+func (user *UserController) getAllClientNotifications(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	notifications, err := user.NotificationConn.GetAllNotification(context.Background(), &pb.GetNotificationsByUserId{
+		UserId: userID,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	notificationData := []*pb.NotificationResponse{}
+	for {
+		notification, err := notifications.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		notificationData = append(notificationData, notification)
+	}
+	jsonData, err := json.Marshal(notificationData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if len(notificationData) == 0 {
+		w.Write([]byte(`{"message":"you don't have any notifications yet"}`))
+		return
+	}
+	w.Write(jsonData)
 }
 
 func (user *UserController) blockClient(w http.ResponseWriter, r *http.Request) {

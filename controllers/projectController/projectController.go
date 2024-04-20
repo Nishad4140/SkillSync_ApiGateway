@@ -6,8 +6,10 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Nishad4140/SkillSync_ApiGateway/helper"
+	helperstruct "github.com/Nishad4140/SkillSync_ApiGateway/helperStruct"
 	"github.com/Nishad4140/SkillSync_ProtoFiles/pb"
 )
 
@@ -141,7 +143,24 @@ func (project *Projectcontroller) getGig(w http.ResponseWriter, r *http.Request)
 		w.Write(jsonData)
 		return
 	}
-	gigs, err := project.Conn.GetAllGigs(context.Background(), nil)
+
+	var viewGig helperstruct.FilterQuery
+
+	viewGig.Page, _ = strconv.Atoi(queryParams.Get("page"))
+	viewGig.Limit, _ = strconv.Atoi(queryParams.Get("limit"))
+	viewGig.Query = queryParams.Get("query")
+	viewGig.Filter = queryParams.Get("filter")
+	viewGig.SortBy = queryParams.Get("sort_by")
+	viewGig.SortDesc, _ = strconv.ParseBool(queryParams.Get("sort_desc"))
+
+	gigs, err := project.Conn.GetAllGigs(context.Background(), &pb.GigFilterQuery{
+		Page:     int32(viewGig.Page),
+		Limit:    int32(viewGig.Limit),
+		Query:    viewGig.Query,
+		Filter:   viewGig.Filter,
+		SortBy:   viewGig.SortBy,
+		SortDesc: viewGig.SortDesc,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -229,6 +248,16 @@ func (project *Projectcontroller) clientAddRequest(w http.ResponseWriter, r *htt
 		http.Error(w, "enter a valid date", http.StatusBadRequest)
 		return
 	}
+
+	date, err := helper.ConvertStringToDate(req.DeliveryDate)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !date.After(time.Now()) {
+		http.Error(w, "please enter a valid date", http.StatusBadRequest)
+		return
+	}
 	if req.CategoryId == 0 {
 		http.Error(w, "enter a valid category id", http.StatusBadRequest)
 		return
@@ -254,7 +283,7 @@ func (project *Projectcontroller) clientAddRequest(w http.ResponseWriter, r *htt
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"message":"gig added successfully"}`))
+	w.Write([]byte(`{"message":"request added successfully"}`))
 }
 
 func (project *Projectcontroller) clientUpdateRequest(w http.ResponseWriter, r *http.Request) {
@@ -273,6 +302,15 @@ func (project *Projectcontroller) clientUpdateRequest(w http.ResponseWriter, r *
 	}
 	if !helper.CheckDate(req.DeliveryDate) {
 		http.Error(w, "enter a valid date", http.StatusBadRequest)
+		return
+	}
+	date, err := helper.ConvertStringToDate(req.DeliveryDate)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !date.After(time.Now()) {
+		http.Error(w, "please enter a valid date", http.StatusBadRequest)
 		return
 	}
 	if req.CategoryId == 0 {
@@ -302,7 +340,7 @@ func (project *Projectcontroller) clientUpdateRequest(w http.ResponseWriter, r *
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"message":"gig updated successfully"}`))
+	w.Write([]byte(`{"message":"request updated successfully"}`))
 }
 
 func (project *Projectcontroller) clientGetRequest(w http.ResponseWriter, r *http.Request) {
@@ -331,9 +369,26 @@ func (project *Projectcontroller) clientGetRequest(w http.ResponseWriter, r *htt
 		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
 		return
 	}
-	req := &pb.GetByUserId{
-		Id: clientID,
+
+	var viewReq helperstruct.FilterQuery
+
+	viewReq.Page, _ = strconv.Atoi(queryParams.Get("page"))
+	viewReq.Limit, _ = strconv.Atoi(queryParams.Get("limit"))
+	viewReq.Query = queryParams.Get("query")
+	viewReq.Filter = queryParams.Get("filter")
+	viewReq.SortBy = queryParams.Get("sort_by")
+	viewReq.SortDesc, _ = strconv.ParseBool(queryParams.Get("sort_desc"))
+
+	req := &pb.RequestFilterQuery{
+		UserId:   clientID,
+		Page:     int32(viewReq.Page),
+		Limit:    int32(viewReq.Limit),
+		Query:    viewReq.Query,
+		Filter:   viewReq.Filter,
+		SortBy:   viewReq.SortBy,
+		SortDesc: viewReq.SortDesc,
 	}
+
 	clientReqs, err := project.Conn.GetAllClientRequest(context.Background(), req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -375,9 +430,27 @@ func (project *Projectcontroller) freelancerGetClientRequests(w http.ResponseWri
 		return
 	}
 
-	reqClients, err := project.Conn.GetAllClientRequestForFreelancers(context.Background(), &pb.GetByUserId{
-		Id: freelancerID,
-	})
+	var viewReq helperstruct.FilterQuery
+
+	queryParams := r.URL.Query()
+	viewReq.Page, _ = strconv.Atoi(queryParams.Get("page"))
+	viewReq.Limit, _ = strconv.Atoi(queryParams.Get("limit"))
+	viewReq.Query = queryParams.Get("query")
+	viewReq.Filter = queryParams.Get("filter")
+	viewReq.SortBy = queryParams.Get("sort_by")
+	viewReq.SortDesc, _ = strconv.ParseBool(queryParams.Get("sort_desc"))
+
+	req := &pb.RequestFilterQuery{
+		UserId:   freelancerID,
+		Page:     int32(viewReq.Page),
+		Limit:    int32(viewReq.Limit),
+		Query:    viewReq.Query,
+		Filter:   viewReq.Filter,
+		SortBy:   viewReq.SortBy,
+		SortDesc: viewReq.SortDesc,
+	}
+
+	reqClients, err := project.Conn.GetAllClientRequestForFreelancers(context.Background(), req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -480,4 +553,96 @@ func (project *Projectcontroller) getAllPackageTypes(w http.ResponseWriter, r *h
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
+}
+
+func (project *Projectcontroller) freelancerShowIntrests(w http.ResponseWriter, r *http.Request) {
+	var req *pb.IntrestRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	freelancerID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = freelancerID
+
+	queryParams := r.URL.Query()
+	reqId := queryParams.Get("req_id")
+
+	req.RequestId = reqId
+	if _, err := project.Conn.ShowIntrest(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"intrest added successfully"}`))
+}
+
+func (project *Projectcontroller) getClientRequestIntrests(w http.ResponseWriter, r *http.Request) {
+	req := &pb.GetAllIntrestRequest{}
+
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+
+	queryParams := r.URL.Query()
+	reqId := queryParams.Get("req_id")
+
+	req.RequestId = reqId
+
+	reqs, err := project.Conn.GetAllIntrest(context.Background(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	var reqData []*pb.IntrestResponse
+	for {
+		req, err := reqs.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		reqData = append(reqData, req)
+	}
+	jsonData, err := json.Marshal(reqData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func (project *Projectcontroller) clientAcknowledgeIntrest(w http.ResponseWriter, r *http.Request) {
+	req := &pb.IntrestAcknowledgmentRequest{}
+
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	req.UserId = userID
+
+	queryParams := r.URL.Query()
+	intrestId := queryParams.Get("intrest_id")
+
+	req.IntrestId = intrestId
+
+	if _, err := project.Conn.ClientIntrestAcknowledgment(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"intrest acknowledged added successfully"}`))
 }

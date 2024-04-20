@@ -34,6 +34,7 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/client/profile/uploadprofileimage", middleware.ClientMiddleware(user.uploadClientProfileImage))
 	r.Patch("/client/profile/name", middleware.ClientMiddleware(user.clientEditName))
 	r.Patch("/client/profile/phone", middleware.ClientMiddleware(user.clientEditPhone))
+	r.Get("/client/notifications", middleware.ClientMiddleware(user.getAllClientNotifications))
 
 	r.Post("/freelancer/signup", user.freelancerSignup)
 	r.Post("/freelancer/login", user.freelancerLogin)

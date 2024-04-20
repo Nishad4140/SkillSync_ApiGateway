@@ -28,6 +28,7 @@ func (project *Projectcontroller) InitializeProjectController(r *chi.Mux) {
 	r.Patch("/freelancers/gigs", middleware.FreelancerMiddleware(project.freelancerUpdateGig))
 	r.Get("/freelancers/gigs", middleware.FreelancerMiddleware(project.freelancerGetAllGigs))
 	r.Get("/freelancer/requests", middleware.FreelancerMiddleware(project.freelancerGetClientRequests))
+	r.Post("/freelancer/requests/intrests", middleware.FreelancerMiddleware(project.freelancerShowIntrests))
 
 	r.Post("/admin/pakcage-types", middleware.AdminMiddleware(project.adminAddProjectType))
 	r.Patch("/admin/package-types", middleware.AdminMiddleware(project.adminEditProjectType))
@@ -35,6 +36,8 @@ func (project *Projectcontroller) InitializeProjectController(r *chi.Mux) {
 	r.Post("/client/requests", middleware.ClientMiddleware(project.clientAddRequest))
 	r.Patch("/client/requests", middleware.ClientMiddleware(project.clientUpdateRequest))
 	r.Get("/client/requests", middleware.ClientMiddleware(project.clientGetRequest))
+	r.Get("/client/request/intrests", middleware.ClientMiddleware(project.getClientRequestIntrests))
+	r.Post("/client/request/intrests", middleware.ClientMiddleware(project.clientAcknowledgeIntrest))
 
 	r.Get("/package-types", project.getAllPackageTypes)
 	r.Get("/gigs", project.getGig)
