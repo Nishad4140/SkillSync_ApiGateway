@@ -18,17 +18,17 @@ func Connect(r *chi.Mux) {
 	}
 	secret := os.Getenv("SECRET")
 
-	userConn, err := helper.DialGrpc(":4001")
+	userConn, err := helper.DialGrpc("ss-user-service:4001")
 	if err != nil {
 		fmt.Println("cannot connect to user service", err)
 	}
 
-	projectConn, err := helper.DialGrpc(":4002")
+	projectConn, err := helper.DialGrpc("ss-project-service:4002")
 	if err != nil {
 		fmt.Println("cannot connect to project service", err)
 	}
 
-	notificationConn, err := helper.DialGrpc(":4007")
+	notificationConn, err := helper.DialGrpc("ss-notification-service:4007")
 	if err != nil {
 		fmt.Println("cannot connect to notification service", err)
 	}

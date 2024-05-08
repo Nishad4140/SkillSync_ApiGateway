@@ -1410,3 +1410,116 @@ func (user *UserController) unBlockFreelancer(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"message":"User UnBlocked Successfully"}`))
 }
+
+func (user *UserController) getAllFreelancerNotifications(w http.ResponseWriter, r *http.Request) {
+	freelancerID, ok := r.Context().Value("freelancerID").(string)
+	if !ok {
+		http.Error(w, "error while retrieving the freelancer id", http.StatusBadRequest)
+		return
+	}
+	notifications, err := user.NotificationConn.GetAllNotification(context.Background(), &pb.GetNotificationsByUserId{
+		UserId: freelancerID,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	notificationData := []*pb.NotificationResponse{}
+	for {
+		notification, err := notifications.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		notificationData = append(notificationData, notification)
+	}
+	jsonData, err := json.Marshal(notificationData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if len(notificationData) == 0 {
+		w.Write([]byte(`{"message":"you don't have any notifications yet"}`))
+		return
+	}
+	w.Write(jsonData)
+}
+
+func (user *UserController) clientPaymentForProject(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	userId := queryParams.Get("user_id")
+	projectId := queryParams.Get("project_id")
+	url := fmt.Sprintf("http://localhost:4009/user/project/payment?user_id=%s&project_id=%s", userId, projectId)
+	req, err := http.NewRequest("GET", url, r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	client := &http.Client{}
+	req.Header = r.Header
+	res, err := client.Do(req)
+	if err != nil || res == nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer res.Body.Close()
+	for k, v := range res.Header {
+		w.Header()[k] = v
+	}
+	w.WriteHeader(res.StatusCode)
+	io.Copy(w, res.Body)
+}
+func (user *UserController) verifyPayment(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	userId := queryParams.Get("user_id")
+	paymentRef := queryParams.Get("payment_ref")
+	orderId := queryParams.Get("order_id")
+	signature := queryParams.Get("signature")
+	id := queryParams.Get("id")
+	total := queryParams.Get("total")
+	projectId := queryParams.Get("project_id")
+	url := fmt.Sprintf("http://localhost:4009/payment/verify?user_id=%s&payment_ref=%s&order_id=%s&signature=%s&id=%s&total=%s&project_id=%s", userId, paymentRef, orderId, signature, id, total, projectId)
+	req, err := http.NewRequest("GET", url, r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	client := &http.Client{}
+	req.Header = r.Header
+	res, err := client.Do(req)
+	if err != nil || res == nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer res.Body.Close()
+	for k, v := range res.Header {
+		w.Header()[k] = v
+	}
+	w.WriteHeader(res.StatusCode)
+	io.Copy(w, res.Body)
+}
+func (user *UserController) paymentVerified(w http.ResponseWriter, r *http.Request) {
+	req, err := http.NewRequest("GET", "http://localhost:4009/payment/verified", r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	client := &http.Client{}
+	req.Header = r.Header
+	res, err := client.Do(req)
+	if err != nil || res == nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer res.Body.Close()
+	for k, v := range res.Header {
+		w.Header()[k] = v
+	}
+	w.WriteHeader(res.StatusCode)
+	io.Copy(w, res.Body)
+}

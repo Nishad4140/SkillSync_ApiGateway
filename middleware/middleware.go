@@ -25,7 +25,8 @@ func ClientMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
-				http.Error(w, "you do not have the authority to perform this operation", http.StatusUnauthorized)
+				fmt.Println("the error is ", r)
+				http.Error(w, "you d o not have the authority to perform this operation ", http.StatusUnauthorized)
 				return
 			}
 		}()
@@ -34,12 +35,14 @@ func ClientMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, "please login", http.StatusUnauthorized)
 			return
 		}
+
 		cookieVal := cookie.Value
 		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
 		if err != nil {
 			http.Error(w, "error in cokie validation", http.StatusUnauthorized)
 			return
 		}
+
 		userID := claims["userID"]
 		ctx := context.WithValue(r.Context(), "userID", userID)
 		next(w, r.WithContext(ctx))
@@ -94,4 +97,13 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), "userID", userID)
 		next(w, r.WithContext(ctx))
 	}
+}
+
+func CorsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, no-cors")
+		next(w, r)
+	})
 }

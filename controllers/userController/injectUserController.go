@@ -15,7 +15,7 @@ type UserController struct {
 }
 
 func NewUserServiceClient(conn *grpc.ClientConn, secret string) *UserController {
-	notificationConn, _ := helper.DialGrpc("localhost:4007")
+	notificationConn, _ := helper.DialGrpc("ss-notification-service:4007")
 	return &UserController{
 		Conn:             pb.NewUserServiceClient(conn),
 		NotificationConn: pb.NewNotificationServiceClient(notificationConn),
@@ -35,6 +35,9 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Patch("/client/profile/name", middleware.ClientMiddleware(user.clientEditName))
 	r.Patch("/client/profile/phone", middleware.ClientMiddleware(user.clientEditPhone))
 	r.Get("/client/notifications", middleware.ClientMiddleware(user.getAllClientNotifications))
+	r.Get("/client/project/payment", middleware.CorsMiddleware(user.clientPaymentForProject))
+	r.Get("/payment/verify", middleware.CorsMiddleware(user.verifyPayment))
+	r.Get("/payment/verified", middleware.CorsMiddleware(user.paymentVerified))
 
 	r.Post("/freelancer/signup", user.freelancerSignup)
 	r.Post("/freelancer/login", user.freelancerLogin)
@@ -54,6 +57,7 @@ func (user *UserController) InitializeUserControllers(r *chi.Mux) {
 	r.Post("/freelancer/education", middleware.FreelancerMiddleware(user.freelancerAddEducation))
 	r.Patch("/freelancer/education", middleware.FreelancerMiddleware(user.freelancerEditEducation))
 	r.Delete("/freelancer/education", middleware.FreelancerMiddleware(user.freelancerRemoveEducation))
+	r.Get("/freelancer/notifications", middleware.FreelancerMiddleware(user.getAllFreelancerNotifications))
 
 	r.Post("/admin/login", user.adminLogin)
 	r.Post("/admin/logout", middleware.AdminMiddleware(user.adminLogout))
