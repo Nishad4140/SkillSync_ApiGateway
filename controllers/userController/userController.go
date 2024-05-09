@@ -1454,7 +1454,7 @@ func (user *UserController) clientPaymentForProject(w http.ResponseWriter, r *ht
 	queryParams := r.URL.Query()
 	userId := queryParams.Get("user_id")
 	projectId := queryParams.Get("project_id")
-	url := fmt.Sprintf("http://localhost:4009/user/project/payment?user_id=%s&project_id=%s", userId, projectId)
+	url := fmt.Sprintf("http://payment-service:4009/user/project/payment?user_id=%s&project_id=%s", userId, projectId)
 	req, err := http.NewRequest("GET", url, r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1483,7 +1483,7 @@ func (user *UserController) verifyPayment(w http.ResponseWriter, r *http.Request
 	id := queryParams.Get("id")
 	total := queryParams.Get("total")
 	projectId := queryParams.Get("project_id")
-	url := fmt.Sprintf("http://localhost:4009/payment/verify?user_id=%s&payment_ref=%s&order_id=%s&signature=%s&id=%s&total=%s&project_id=%s", userId, paymentRef, orderId, signature, id, total, projectId)
+	url := fmt.Sprintf("http://payment-service:4009/payment/verify?user_id=%s&payment_ref=%s&order_id=%s&signature=%s&id=%s&total=%s&project_id=%s", userId, paymentRef, orderId, signature, id, total, projectId)
 	req, err := http.NewRequest("GET", url, r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1504,7 +1504,7 @@ func (user *UserController) verifyPayment(w http.ResponseWriter, r *http.Request
 	io.Copy(w, res.Body)
 }
 func (user *UserController) paymentVerified(w http.ResponseWriter, r *http.Request) {
-	req, err := http.NewRequest("GET", "http://localhost:4009/payment/verified", r.Body)
+	req, err := http.NewRequest("GET", "http://payment-service:4009/payment/verified", r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

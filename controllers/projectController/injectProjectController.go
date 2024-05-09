@@ -15,7 +15,7 @@ type Projectcontroller struct {
 }
 
 func NewProjectServiceClient(conn *grpc.ClientConn, secret string) *Projectcontroller {
-	userConn, _ := helper.DialGrpc("ss-user-service:4001")
+	userConn, _ := helper.DialGrpc("user-service:4001")
 	return &Projectcontroller{
 		Conn:     pb.NewProjectServiceClient(conn),
 		UserConn: pb.NewUserServiceClient(userConn),

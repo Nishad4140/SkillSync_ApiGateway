@@ -15,7 +15,7 @@ type UserController struct {
 }
 
 func NewUserServiceClient(conn *grpc.ClientConn, secret string) *UserController {
-	notificationConn, _ := helper.DialGrpc("ss-notification-service:4007")
+	notificationConn, _ := helper.DialGrpc("notification-service:4007")
 	return &UserController{
 		Conn:             pb.NewUserServiceClient(conn),
 		NotificationConn: pb.NewNotificationServiceClient(notificationConn),

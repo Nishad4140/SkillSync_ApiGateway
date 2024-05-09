@@ -1,2 +1,7 @@
 .env
 docker-compose.yaml
+nginx.conf
+db-depl.yaml
+kafka-depl.yaml
+microservice-depl.yaml
+nginx-depl.yaml
