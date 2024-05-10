@@ -1523,3 +1523,120 @@ func (user *UserController) paymentVerified(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(res.StatusCode)
 	io.Copy(w, res.Body)
 }
+
+func (user *UserController) addReviewForFreelancer(w http.ResponseWriter, r *http.Request) {
+	var req *pb.UserReviewRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error whil retrieving companyId", http.StatusBadRequest)
+		return
+	}
+	if !helper.CheckString(req.Description) {
+		http.Error(w, "please enter a valid description", http.StatusBadRequest)
+		return
+	}
+	if helper.CheckNegative(req.Rating) {
+		http.Error(w, "please provide a valid rating within 5", http.StatusBadRequest)
+		return
+	}
+	if req.Rating > 5 {
+		http.Error(w, "please provide a valid rating within 5", http.StatusBadRequest)
+		return
+	}
+	queryParams := r.URL.Query()
+	freelancerId := queryParams.Get("freelancer_id")
+	projectId := queryParams.Get("project_id")
+	req.UserId = userID
+	req.FreelancerId = freelancerId
+	req.ProjectId = projectId
+	if _, err := user.ReviewConn.UserAddReview(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"user added review successfully"}`))
+}
+func (user *UserController) getReviewForFreelancer(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	freelancerId := queryParams.Get("freelancer_id")
+	reviews, err := user.ReviewConn.GetReview(context.Background(), &pb.ReviewById{
+		Id: freelancerId,
+	})
+	if freelancerId == "" {
+		http.Error(w, "please select a freelancer to get reviews", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	reviewData := []*pb.ReviewResponse{}
+	for {
+		review, err := reviews.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		reviewData = append(reviewData, review)
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if len(reviewData) == 0 {
+		w.Write([]byte(`{"message":"no review yet"}`))
+		return
+	}
+	jsonData, err := json.Marshal(reviewData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Write(jsonData)
+}
+func (user *UserController) deleteReview(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	freelancerId := queryParams.Get("freelancer_id")
+	projectId := queryParams.Get("project_id")
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "error whil retrieving companyId", http.StatusBadRequest)
+		return
+	}
+	req := &pb.UserReviewRequest{
+		UserId:       userID,
+		FreelancerId: freelancerId,
+		ProjectId:    projectId,
+	}
+	if _, err := user.ReviewConn.RemoveReview(context.Background(), req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"user review removed Successfully"}`))
+}
+
+func (user *UserController) reportClient(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	userId := queryParams.Get("client_id")
+	if userId == "" {
+		http.Error(w, "please select a user to report", http.StatusBadRequest)
+		return
+	}
+	if _, err := user.Conn.ReportUser(context.Background(), &pb.GetUserById{
+		Id: userId,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message":"user reported successfully"}`))
+}
