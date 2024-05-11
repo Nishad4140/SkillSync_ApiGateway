@@ -609,7 +609,7 @@ func (user *UserController) clientGetAddress(w http.ResponseWriter, r *http.Requ
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	if address.Country != "" {
+	if address.Country == "" {
 		w.Write([]byte(`{"message":"please add address"}`))
 		return
 	}
