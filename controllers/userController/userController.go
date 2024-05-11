@@ -305,7 +305,7 @@ func (user *UserController) adminLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	cookieString, err := jwt.GenerateJWT(res.Id, true, []byte(user.Secret))
+	cookieString, err := jwt.GenerateJWT(res.Id, true, []byte("nishad"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

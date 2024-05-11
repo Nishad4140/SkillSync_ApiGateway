@@ -39,11 +39,11 @@ func ClientMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		cookieVal := cookie.Value
 		fmt.Println(cookieVal)
 		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	http.Error(w, "error in cookie validation", http.StatusUnauthorized)
-		// 	return
-		// }
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "error in cookie validation", http.StatusUnauthorized)
+			return
+		}
 
 		userID := claims["userID"]
 
@@ -94,12 +94,12 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 		cookieVal := cookie.Value
 		fmt.Println(cookieVal)
-		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	http.Error(w, "error in cookie validation", http.StatusUnauthorized)
-		// 	return
-		// }
+		claims, err := jwt.ValidateToken(cookieVal, []byte("nishad"))
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "error in cookie validation", http.StatusUnauthorized)
+			return
+		}
 		userID := claims["userID"]
 		fmt.Println(userID)
 		ctx := context.WithValue(r.Context(), "userID", userID)
