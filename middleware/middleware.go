@@ -14,7 +14,7 @@ func init() {
 	if err := godotenv.Load("../.env"); err != nil {
 		fmt.Println("secret cannot be retrieved", err)
 	}
-	secret = os.Getenv("secret")
+	secret = os.Getenv("SECRET")
 }
 
 var (
@@ -94,7 +94,7 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 		cookieVal := cookie.Value
 		fmt.Println(cookieVal)
-		claims, err := jwt.ValidateToken(cookieVal, []byte("nishad"))
+		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "error in cookie validation", http.StatusUnauthorized)
