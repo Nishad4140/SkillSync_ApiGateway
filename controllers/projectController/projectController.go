@@ -991,7 +991,7 @@ func (project *Projectcontroller) freelancerUpdateProjectStatus(w http.ResponseW
 
 	curentSts, _ := strconv.Atoi(proj.Status)
 
-	if curentSts < sts {
+	if curentSts > sts {
 		http.Error(w, "please enter a status greater than current status value", http.StatusBadRequest)
 		return
 	}
