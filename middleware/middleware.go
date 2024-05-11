@@ -64,6 +64,7 @@ func FreelancerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		cookieVal := cookie.Value
+		fmt.Println(cookieVal)
 		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
 		if err != nil {
 			fmt.Println(err)
