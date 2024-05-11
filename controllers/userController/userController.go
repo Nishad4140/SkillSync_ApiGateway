@@ -946,7 +946,7 @@ func (user *UserController) freelancerEditPhone(w http.ResponseWriter, r *http.R
 		http.Error(w, "please enter a valid phone number", http.StatusBadRequest)
 		return
 	}
-	if _, err := user.Conn.ClientEditPhone(context.Background(), req); err != nil {
+	if _, err := user.Conn.FreelancerEditPhone(context.Background(), req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
