@@ -39,7 +39,8 @@ func ClientMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		cookieVal := cookie.Value
 		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
 		if err != nil {
-			http.Error(w, "error in cokie validation", http.StatusUnauthorized)
+			fmt.Println(err)
+			http.Error(w, "error in cookie validation", http.StatusUnauthorized)
 			return
 		}
 
@@ -65,7 +66,8 @@ func FreelancerMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		cookieVal := cookie.Value
 		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
 		if err != nil {
-			http.Error(w, "error in cokie validation", http.StatusUnauthorized)
+			fmt.Println(err)
+			http.Error(w, "error in cookie validation", http.StatusUnauthorized)
 			return
 		}
 		userID := claims["userID"]
@@ -90,7 +92,8 @@ func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		cookieVal := cookie.Value
 		claims, err := jwt.ValidateToken(cookieVal, []byte(secret))
 		if err != nil {
-			http.Error(w, "error in cokie validation", http.StatusUnauthorized)
+			fmt.Println(err)
+			http.Error(w, "error in cookie validation", http.StatusUnauthorized)
 			return
 		}
 		userID := claims["userID"]
